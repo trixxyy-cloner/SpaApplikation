@@ -1,13 +1,47 @@
 import Calendar from "react-calendar";
+import { useState, useEffect } from "react";
 
-const SpaCalendar=()=>{
+const SpaCalendar = () => {
+  const [redDaysList, setRedDaysList] = useState<any[]>([]);
 
-    return(
+  useEffect(() => {
+    const getSwedishHolidays = async () => {
+      const response = await fetch("http://sholiday.faboul.se/dagar/v2.1/2026");
+      const data = await response.json();
+
+      // console.log(data.dagar);
+      const filteredRedDays = [];
+
+      for (const dag of data.dagar) {
+        if (dag["röd dag"] === "Ja" ){
+          // console.log(dag);
+          filteredRedDays.push(dag)
+        }
+      }
+      setRedDaysList(filteredRedDays);
+    };
+    getSwedishHolidays();
+  });
+
+  const shouldDisableTile = ({ date } : { date : Date}) => {
+    const calendarDateString = date.toLocaleDateString("sv-SE");
+    const isMonday = date.getDay() === 1;
+
+    let isHoliday = false;
+
+    for (const holiday of redDaysList){
+      if (holiday.datum === calendarDateString){
+        isHoliday = true;
+      }
+    }
+
+    return isMonday || isHoliday;
+  }
+
+  return (
     <div>
-        <Calendar showWeekNumbers ></Calendar>
-
+      <Calendar tileDisabled={shouldDisableTile}/>
     </div>
-
-    )
-}
+  );
+};
 export default SpaCalendar;
