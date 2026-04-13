@@ -1,10 +1,11 @@
 import "./App.css";
-import Calendar from "react-calendar";
+import SpaCalendar from "./components/SpaCalendar";
 const App = () => {
   return (
     <>
       <h1>Välkommen till Single page application Spa't</h1>
-      <Calendar></Calendar>
+      <SpaCalendar></SpaCalendar>
+      //
     </>
   );
 };
