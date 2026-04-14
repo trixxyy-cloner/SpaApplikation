@@ -5,6 +5,11 @@ import BookingForm from "./BookingForm";
 import useBookings from "../utils/Storage";
 import TimerSlots from "./TimeSlots";
 import '../css/dayTile.css'
+import type { Booking } from "../types/BookingType";
+
+//!!! Accessing localstorage here to give TimeSlots access to bookings because the state wasn't working !!!
+  const saved = localStorage.getItem("bookedTimes");
+  const bookings: Booking[] = saved? JSON.parse(saved) : []
 
 interface Holiday {
   datum: string;
@@ -98,7 +103,7 @@ const SpaCalendar = () => {
       <Calendar 
       tileDisabled={shouldDisableTile} 
       onChange={handleDateChange}
-      tileContent={	({ date, view }) => view === 'month' && !shouldDisableTile({date: date})? <TimerSlots day={date}/> : null}
+      tileContent={	({ date, view }) => view === 'month' && !shouldDisableTile({date: date})? <TimerSlots day={date.toISOString().split("T")[0]} bookedTimes={bookings}/> : null}
       tileClassName={({date, view}) => view === 'month'? "availibleDay" : null}
       />
 

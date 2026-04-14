@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 
-interface BookingFormProps {
+export interface BookingFormProps {
     selectedDate: Date | null;
     selectedTimeSlot: "FM" | "EM" | "Kväll" | null;
     onSubmit: (data: {
