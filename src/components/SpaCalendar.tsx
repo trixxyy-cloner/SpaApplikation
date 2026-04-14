@@ -3,10 +3,13 @@ import { useState, useEffect } from "react";
 import TimeSlotPicker from "./TimeSlotPicker";
 import BookingForm from "./BookingForm";
 import useBookings from "../utils/Storage";
+import TimerSlots from "./TimeSlots";
+import '../css/dayTile.css'
 
 interface Holiday {
   datum: string;
 }
+
 
 const SpaCalendar = () => {
   const [redDaysList, setRedDaysList] = useState<Holiday[]>([]);
@@ -92,7 +95,12 @@ const SpaCalendar = () => {
   return (
     <div>
         <h2>Välj datum</h2>
-      <Calendar tileDisabled={shouldDisableTile} minDate={new Date()} onChange={handleDateChange}/>
+      <Calendar 
+      tileDisabled={shouldDisableTile} 
+      onChange={handleDateChange}
+      tileContent={	({ date, view }) => view === 'month' && !shouldDisableTile({date: date})? <TimerSlots day={date}/> : null}
+      tileClassName={({date, view}) => view === 'month'? "availibleDay" : null}
+      />
 
       {selectedDate && (
         <TimeSlotPicker

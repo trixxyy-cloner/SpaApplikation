@@ -1,0 +1,10 @@
+.availibleDay{
+    height: 49.7px;
+    overflow-y: scroll !important;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+.availibleDay::-webkit-scrollbar{
+    display: none;
+}
