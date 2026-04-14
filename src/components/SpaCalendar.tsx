@@ -1,6 +1,7 @@
 import Calendar from "react-calendar";
 import { useState, useEffect } from "react";
 import TimerSlots from "./TimeSlots";
+import '../css/dayTile.css'
 
 const SpaCalendar = () => {
   const [redDaysList, setRedDaysList] = useState<any[]>([]);
@@ -43,7 +44,11 @@ const SpaCalendar = () => {
 
   return (
     <div>
-      <Calendar tileDisabled={shouldDisableTile} tileContent={	({ date, view }) => view === 'month' && !shouldDisableTile({date: date})? <TimerSlots/> : null}/>
+      <Calendar 
+      tileDisabled={shouldDisableTile} 
+      tileContent={	({ date, view }) => view === 'month' && !shouldDisableTile({date: date})? <TimerSlots/> : null}
+      tileClassName={({date, view}) => view === 'month' && !shouldDisableTile({date: date})? "availibleDay" : null}
+      />
     </div>
   );
 };
