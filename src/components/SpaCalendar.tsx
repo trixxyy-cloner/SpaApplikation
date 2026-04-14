@@ -1,8 +1,12 @@
 import Calendar from "react-calendar";
 import { useState, useEffect } from "react";
+import TimeSlotPicker from "./TimeSlotPicker";
+import BookingForm from "./BookingForm";
 
 const SpaCalendar = () => {
   const [redDaysList, setRedDaysList] = useState<any[]>([]);
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [selectedTimeSlot, setSelectedTimeSlot] = useState<"FM" | "EM" | "Kväll" | null>(null);
 
   useEffect(() => {
     const getSwedishHolidays = async () => {
@@ -40,9 +44,40 @@ const SpaCalendar = () => {
     return isMonday || isHoliday;
   }
 
+  const handleDateChange = (value: any) => {
+    const date = Array.isArray(value) ? value[0] : value;
+    setSelectedDate(date);
+    setSelectedTimeSlot(null);
+  }
+
+  const handleTimeSlotSelect = (timeSlot: "FM" | "EM" | "Kväll") => {
+    setSelectedTimeSlot(timeSlot);
+  };
+
+  const handleBookingSubmit = (data: any) => {
+    console.log("Bokning:", { date: selectedDate, timeSlot: selectedTimeSlot, ...data });
+  };
+
   return (
     <div>
-      <Calendar tileDisabled={shouldDisableTile}/>
+        <h2>Välj datum</h2>
+      <Calendar tileDisabled={shouldDisableTile} onChange={handleDateChange}/>
+
+      {selectedDate && (
+        <TimeSlotPicker
+            selectedDate={selectedDate}
+            selectedTimeSlot={selectedTimeSlot}
+            onTimeSlotSelect={handleTimeSlotSelect}
+        />
+      )}
+
+      {selectedDate && selectedTimeSlot && (
+        <BookingForm
+            selectedDate={selectedDate}
+            selectedTimeSlot={selectedTimeSlot}
+            onSubmit={handleBookingSubmit}
+        />
+      )}
     </div>
   );
 };
