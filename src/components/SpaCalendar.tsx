@@ -3,8 +3,12 @@ import { useState, useEffect } from "react";
 import TimeSlotPicker from "./TimeSlotPicker";
 import BookingForm from "./BookingForm";
 
+interface Holiday {
+  datum: string;
+}
+
 const SpaCalendar = () => {
-  const [redDaysList, setRedDaysList] = useState<any[]>([]);
+  const [redDaysList, setRedDaysList] = useState<Holiday[]>([]);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedTimeSlot, setSelectedTimeSlot] = useState<"FM" | "EM" | "Kväll" | null>(null);
 
