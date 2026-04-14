@@ -61,7 +61,7 @@ const SpaCalendar = () => {
   };
 
   const handleBookingSubmit = (data: any) => {
-    if (!selectedDate) return;
+    if (!selectedDate || !selectedTimeSlot) return;
 
     const dateString = selectedDate.toISOString().split("T")[0];
 
