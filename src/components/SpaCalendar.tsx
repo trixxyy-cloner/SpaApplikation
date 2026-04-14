@@ -1,8 +1,12 @@
 import Calendar from "react-calendar";
 import { useState, useEffect } from "react";
 
+interface Holiday {
+  datum: string;
+}
+
 const SpaCalendar = () => {
-  const [redDaysList, setRedDaysList] = useState<any[]>([]);
+  const [redDaysList, setRedDaysList] = useState<Holiday[]>([]);
 
   useEffect(() => {
     const getSwedishHolidays = async () => {
