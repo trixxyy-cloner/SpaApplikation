@@ -9,7 +9,7 @@ const SpaCalendar = () => {
       const response = await fetch("http://sholiday.faboul.se/dagar/v2.1/2026");
       const data = await response.json();
 
-      // console.log(data.dagar);
+      console.log(data.dagar);
       const filteredRedDays = [];
 
       for (const dag of data.dagar) {
@@ -21,7 +21,9 @@ const SpaCalendar = () => {
       setRedDaysList(filteredRedDays);
     };
     getSwedishHolidays();
-  });
+
+  },[]
+);
 
   const shouldDisableTile = ({ date } : { date : Date}) => {
     const calendarDateString = date.toLocaleDateString("sv-SE");
