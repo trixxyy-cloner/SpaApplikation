@@ -1,4 +1,8 @@
-export default function TimerSlots(){
+import '../css/TimeSlot.css'
+
+export default function TimerSlots({day}: {day: Date}){
+    //needs local storage to find booked timeslots
+    
     return(
         <>
             <p>Varm: FM</p>

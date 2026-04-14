@@ -46,8 +46,8 @@ const SpaCalendar = () => {
     <div>
       <Calendar 
       tileDisabled={shouldDisableTile} 
-      tileContent={	({ date, view }) => view === 'month' && !shouldDisableTile({date: date})? <TimerSlots/> : null}
-      tileClassName={({date, view}) => view === 'month' && !shouldDisableTile({date: date})? "availibleDay" : null}
+      tileContent={	({ date, view }) => view === 'month' && !shouldDisableTile({date: date})? <TimerSlots day={date}/> : null}
+      tileClassName={({date, view}) => view === 'month'? "availibleDay" : null}
       />
     </div>
   );
