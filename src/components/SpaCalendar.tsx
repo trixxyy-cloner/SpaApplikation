@@ -92,7 +92,7 @@ const SpaCalendar = () => {
   return (
     <div>
         <h2>Välj datum</h2>
-      <Calendar tileDisabled={shouldDisableTile} onChange={handleDateChange}/>
+      <Calendar tileDisabled={shouldDisableTile} minDate={new Date()} onChange={handleDateChange}/>
 
       {selectedDate && (
         <TimeSlotPicker
