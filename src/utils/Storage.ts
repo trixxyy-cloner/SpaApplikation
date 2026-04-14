@@ -20,14 +20,21 @@ const useBookings = () => {
     setBookedTimes((prev: any[]) => [...prev, time]);
   };
 
-  //Kollar om en tid redan är bokad
-  const isBooked = (date: string, timeSlot: string) => {
+  //Kollar om varm är bokad
+  const isWarmBooked = (date: string, timeSlot: string) => {
     return bookedTimes.some(
-      (booked) => booked.date === date && booked.time === timeSlot,
+      (booked) => booked.date === date && booked.time === timeSlot && booked.package === "Varm"
     );
   };
 
-  return { bookedTimes, bookTime, isBooked };
+  //Kollar om kall är bokad
+  const isColdBooked = (date: string, timeSlot: string) => {
+    return bookedTimes.some(
+      (booked) => booked.date === date && booked.time === timeSlot && booked.package === "Kall"
+    );
+  };
+
+  return { bookedTimes, bookTime, isWarmBooked, isColdBooked };
 };
 
 export default useBookings;

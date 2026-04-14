@@ -2,6 +2,7 @@ import Calendar from "react-calendar";
 import { useState, useEffect } from "react";
 import TimeSlotPicker from "./TimeSlotPicker";
 import BookingForm from "./BookingForm";
+import useBookings from "../utils/Storage";
 
 interface Holiday {
   datum: string;
@@ -11,6 +12,7 @@ const SpaCalendar = () => {
   const [redDaysList, setRedDaysList] = useState<Holiday[]>([]);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedTimeSlot, setSelectedTimeSlot] = useState<"FM" | "EM" | "Kväll" | null>(null);
+  const { bookTime, isWarmBooked, isColdBooked } = useBookings();
 
   useEffect(() => {
     const getSwedishHolidays = async () => {
@@ -59,8 +61,33 @@ const SpaCalendar = () => {
   };
 
   const handleBookingSubmit = (data: any) => {
-    console.log("Bokning:", { date: selectedDate, timeSlot: selectedTimeSlot, ...data });
-  };
+    if (!selectedDate) return;
+
+    const dateString = selectedDate.toISOString().split("T")[0];
+
+    if (data.package === "Varm" && isWarmBooked(dateString, selectedTimeSlot)) {
+        alert("Varm är redan bokad denna tid!");
+        return;
+    }
+    if (data.package === "Kall" && isColdBooked(dateString, selectedTimeSlot)) {
+        alert("Kall är redan bokad denna tid!");
+        return;
+    }
+
+    bookTime({
+        date: dateString,
+        time: selectedTimeSlot,
+        package: data.package,
+        companyName: data.companyName,
+        numberOfPeople: data.numberOfPeople,
+        phone: data.phone,
+        email: data.email,
+    });
+
+    alert("Bokning sparad!");
+    setSelectedTimeSlot(null);
+  }
+
 
   return (
     <div>
@@ -72,6 +99,8 @@ const SpaCalendar = () => {
             selectedDate={selectedDate}
             selectedTimeSlot={selectedTimeSlot}
             onTimeSlotSelect={handleTimeSlotSelect}
+            isWarmBooked={isWarmBooked}
+            isColdBooked={isColdBooked}
         />
       )}
 
