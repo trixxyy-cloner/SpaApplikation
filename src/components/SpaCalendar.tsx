@@ -59,7 +59,12 @@ const SpaCalendar: React.FC<SpaCalendarProps> = ({ onBack }) => {
     return isMonday || isHoliday || isPast;
   }
 
-  const handleDateChange = (value: Date | Date[], _event?: unknown): void => {
+  const handleDateChange = (value: Date | Date[] | null): void => {
+  if (!value) {
+    setSelectedDate(null);
+    setSelectedTimeSlot(null);
+    return;
+  }
   const date = Array.isArray(value) ? value[0] : value;
   setSelectedDate(date);
   setSelectedTimeSlot(null);
@@ -135,7 +140,7 @@ const SpaCalendar: React.FC<SpaCalendarProps> = ({ onBack }) => {
               <div className="calendar-wrapper">
                 <Calendar
                   tileDisabled={shouldDisableTile}
-                  onChange={handleDateChange}
+                  onChange={(value) => handleDateChange(value as Date | Date[] | null)}
                   value={selectedDate}
                   className="w-full"
                 />
