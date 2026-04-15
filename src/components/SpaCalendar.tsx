@@ -3,7 +3,6 @@ import { useState, useEffect } from "react";
 import TimeSlotPicker from "./TimeSlotPicker";
 import BookingForm from "./BookingForm";
 import useBookings from "../utils/Storage";
-import "../styles/calendar.css";
 
 interface Holiday {
   datum: string;
