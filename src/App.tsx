@@ -1,14 +1,19 @@
 import "./App.css";
 import 'react-calendar/dist/Calendar.css';
+import { useState } from "react";
+import HomePage from "./components/HomePage";
 import SpaCalendar from "./components/SpaCalendar";
-import BookingForm from "./components/BookingForm";
-import TimeSlotPicker from "./components/TimeSlotPicker";
+
 const App = () => {
+  const [showBooking, setShowBooking] = useState(false);
+
   return (
     <>
-      <h1>Välkommen till Single page application Spa't</h1>
-      <SpaCalendar>dwad</SpaCalendar>
-      //
+      {!showBooking ? (
+        <HomePage onStartBooking={() => setShowBooking(true)} />
+      ) : (
+        <SpaCalendar onBack={() => setShowBooking(false)} />
+      )}
     </>
   );
 };
