@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import type { Booking } from "../types/BookingType";
 
 const useBookings = () => {
   const [bookedTimes, setBookedTimes] = useState<any[]>(() => {
