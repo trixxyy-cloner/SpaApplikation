@@ -2,17 +2,12 @@ import { useState, useEffect } from "react";
 import type { Booking } from "../types/BookingType";
 
 const useBookings = () => {
-  const [bookedTimes, setBookedTimes] = useState<Booking[]>([]);
-
-  //Hämta från localstorage vid start
-  useEffect(() => {
+  const [bookedTimes, setBookedTimes] = useState<any[]>(() => {
     const saved = localStorage.getItem("bookedTimes");
-    if (saved) {
-      setBookedTimes(JSON.parse(saved));
-    }
-  }, []);
+    return saved ? JSON.parse(saved) : [];
+  });
 
-  //Sparar varje gång det ändras
+  // Sparar varje gång det ändras
   useEffect(() => {
     localStorage.setItem("bookedTimes", JSON.stringify(bookedTimes));
   }, [bookedTimes]);
@@ -21,14 +16,12 @@ const useBookings = () => {
     setBookedTimes((prev: any[]) => [...prev, time]);
   };
 
-  //Kollar om varm är bokad
   const isWarmBooked = (date: string, timeSlot: string) => {
     return bookedTimes.some(
       (booked) => booked.date === date && booked.time === timeSlot && booked.package === "Varm"
     );
   };
 
-  //Kollar om kall är bokad
   const isColdBooked = (date: string, timeSlot: string) => {
     return bookedTimes.some(
       (booked) => booked.date === date && booked.time === timeSlot && booked.package === "Kall"

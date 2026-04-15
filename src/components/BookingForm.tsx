@@ -1,16 +1,16 @@
 import React, { useState } from "react";
 
-export interface BookingFormProps {
-    selectedDate: Date | null;
-    selectedTimeSlot: "FM" | "EM" | "Kväll" | null;
-    onSubmit: (data: {
-        package: "Varm" | "Kall";
-        companyName: string;
-        numberOfPeople: number;
-        phone: string;
-        email: string;
-    }) => void;
-} 
+interface BookingFormProps {
+  selectedDate: Date | null;
+  selectedTimeSlot: "FM" | "EM" | "Kväll" | null;
+  onSubmit: (data: {
+    package: "Varm" | "Kall";
+    companyName: string;
+    numberOfPeople: number;
+    phone: string;
+    email: string;
+  }) => void;
+}
 
 const BookingForm: React.FC<BookingFormProps> = ({
   selectedDate,
@@ -25,105 +25,156 @@ const BookingForm: React.FC<BookingFormProps> = ({
     email: "",
   });
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-        const { name, value } = e.target;
-        setFormData((prev) => ({
-            ...prev,
-            [name]: name === "numberOfPeople" ? parseInt(value, 10) : value,
-        }));
-    };
+  const [submitted, setSubmitted] = useState(false);
 
-    const handleSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!selectedDate || !selectedTimeSlot) {
-            alert("Välj datum och tid först");
-            return;
-        }
-        onSubmit(formData);
-        setFormData({
-            package: "Varm",
-            companyName: "",
-            numberOfPeople: 1,
-            phone: "",
-            email: "",
-        });
-    };
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: name === "numberOfPeople" ? parseInt(value, 10) : value,
+    }));
+  };
 
-    if (!selectedDate || !selectedTimeSlot) {
-        return <div className="booking-form"><p>Välj datum och tid först</p></div>;
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!formData.companyName || !formData.phone || !formData.email) {
+      alert("Fyll i alla obligatoriska fält");
+      return;
     }
 
+    onSubmit(formData);
+    setSubmitted(true);
+    setFormData({
+      package: "Varm",
+      companyName: "",
+      numberOfPeople: 1,
+      phone: "",
+      email: "",
+    });
+
+    setTimeout(() => setSubmitted(false), 3000);
+  };
+
+  if (!selectedDate || !selectedTimeSlot) {
     return (
-        <div className="booking-form">
-            <h3>Bokningsformulär</h3>
-            <form onSubmit={handleSubmit}>
-                <div className="form-group">
-                    <label htmlFor="package">Välj paket:</label>
-                    <select
-                        id="package"
-                        name="package"
-                        value={formData.package}
-                        onChange={handleChange}
-                    >
-                        <option value="Varm">Varm</option>
-                        <option value="Kall">Kall</option>
-                    </select>
-                </div>
-
-                <div className="form-group">
-                    <label htmlFor="companyName">Sällskapets namn:</label>
-                    <input
-                        id="companyName"
-                        type="text"
-                        name="companyName"
-                        value={formData.companyName}
-                        onChange={handleChange}
-                        required
-                    />
-                </div>
-
-                <div className="form-group">
-                    <label htmlFor="numberOfPeople">Antal personer:</label>
-                    <input
-                        id="numberOfPeople"
-                        type="number"
-                        name="numberOfPeople"
-                        value={formData.numberOfPeople}
-                        onChange={handleChange}
-                        min="1"
-                        max="20"
-                        required
-                    />
-                </div>
-
-                <div className="form-group">
-                    <label htmlFor="phone">Telefon:</label>
-                    <input
-                        id="phone"
-                        type="tel"
-                        name="phone"
-                        value={formData.phone}
-                        onChange={handleChange}
-                        required
-                    />
-                </div>
-
-                <div className="form-group">
-                    <label htmlFor="email">Email:</label>
-                    <input
-                        id="email"
-                        type="email"
-                        name="email"
-                        value={formData.email}
-                        onChange={handleChange}
-                        required
-                    />
-                </div>
-
-                <button type="submit">Bekräfta bokning</button>
-            </form>
-        </div>
+      <div className="bg-blue-50 border-l-4 border-blue-500 p-6 rounded">
+        <p className="text-blue-800 text-lg">Välj datum och tid först</p>
+      </div>
     );
+  }
+
+  return (
+    <div className="bg-white rounded-lg shadow-lg p-8">
+      <h3 className="text-2xl font-bold text-gray-800 mb-6">
+        Bokningsformulär
+      </h3>
+
+      {submitted && (
+        <div className="mb-6 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded">
+          ✓ Bokningen är registrerad!
+        </div>
+      )}
+
+      <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Package Selection */}
+        <div>
+          <label htmlFor="package" className="block text-sm font-semibold text-gray-700 mb-2">
+            Välj paket *
+          </label>
+          <select
+            id="package"
+            name="package"
+            value={formData.package}
+            onChange={handleChange}
+            className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 transition"
+          >
+            <option value="Varm">🔥 Varm</option>
+            <option value="Kall">❄️ Kall</option>
+          </select>
+        </div>
+
+        {/* Company Name */}
+        <div>
+          <label htmlFor="companyName" className="block text-sm font-semibold text-gray-700 mb-2">
+            Sällskapets namn *
+          </label>
+          <input
+            id="companyName"
+            type="text"
+            name="companyName"
+            value={formData.companyName}
+            onChange={handleChange}
+            placeholder="T.ex. Familjen Andersson"
+            required
+            className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 transition"
+          />
+        </div>
+
+        {/* Number of People */}
+        <div>
+          <label htmlFor="numberOfPeople" className="block text-sm font-semibold text-gray-700 mb-2">
+            Antal personer *
+          </label>
+          <input
+            id="numberOfPeople"
+            type="number"
+            name="numberOfPeople"
+            value={formData.numberOfPeople}
+            onChange={handleChange}
+            min="1"
+            max="20"
+            required
+            className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 transition"
+          />
+        </div>
+
+        {/* Phone */}
+        <div>
+          <label htmlFor="phone" className="block text-sm font-semibold text-gray-700 mb-2">
+            Telefonnummer *
+          </label>
+          <input
+            id="phone"
+            type="tel"
+            name="phone"
+            value={formData.phone}
+            onChange={handleChange}
+            placeholder="070-000 00 00"
+            required
+            className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 transition"
+          />
+        </div>
+
+        {/* Email */}
+        <div>
+          <label htmlFor="email" className="block text-sm font-semibold text-gray-700 mb-2">
+            Email *
+          </label>
+          <input
+            id="email"
+            type="email"
+            name="email"
+            value={formData.email}
+            onChange={handleChange}
+            placeholder="namn@example.com"
+            required
+            className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 transition"
+          />
+        </div>
+
+        {/* Submit Button */}
+        <button
+          type="submit"
+          className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-bold py-3 rounded-lg transition transform hover:scale-105 duration-300 shadow-lg"
+        >
+          Bekräfta bokning
+        </button>
+      </form>
+    </div>
+  );
 };
 
 export default BookingForm;
