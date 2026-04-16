@@ -3,18 +3,11 @@ import { useState, useEffect } from "react";
 import TimeSlotPicker from "./TimeSlotPicker";
 import BookingForm from "./BookingForm";
 import useBookings from "../utils/Storage";
+import type { Booking } from "../types/BookingType";
 
 interface Holiday {
   datum: string;
   "röd dag": string;
-}
-
-interface BookingData {
-  package: "Varm" | "Kall";
-  companyName: string;
-  numberOfPeople: number;
-  phone: string;
-  email: string;
 }
 
 interface SpaCalendarProps {
@@ -74,7 +67,7 @@ const SpaCalendar: React.FC<SpaCalendarProps> = ({ onBack }) => {
     setSelectedTimeSlot(timeSlot);
   };
 
-  const handleBookingSubmit = (data: BookingData): void => {
+  const handleBookingSubmit = (data: Omit<Booking, 'date' | 'time'>): void => {
     if (!selectedDate || !selectedTimeSlot) return;
 
     const dateString = selectedDate.toISOString().split("T")[0];

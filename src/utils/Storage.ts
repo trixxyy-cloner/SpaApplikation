@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
+import type { Booking } from "../types/BookingType";
 
 const useBookings = () => {
-  const [bookedTimes, setBookedTimes] = useState<{ date: string, time: string, package: string, companyName: string, numberOfPeople: number, phone: string, email: string }[]>(() => {
+  const [bookedTimes, setBookedTimes] = useState<Booking[]>(() => {
     const saved = localStorage.getItem("bookedTimes");
     return saved ? JSON.parse(saved) : [];
   });
@@ -11,8 +12,8 @@ const useBookings = () => {
     localStorage.setItem("bookedTimes", JSON.stringify(bookedTimes));
   }, [bookedTimes]);
 
-  const bookTime = (time: { date: string, time: string, package: string, companyName: string, numberOfPeople: number, phone: string, email: string}): void => {
-    setBookedTimes((prev: typeof bookedTimes) => [...prev, time]);
+  const bookTime = (time: Booking): void => {
+    setBookedTimes((prev: Booking[]) => [...prev, time]);
   };
 
   const isWarmBooked = (date: string, timeSlot: string) => {
