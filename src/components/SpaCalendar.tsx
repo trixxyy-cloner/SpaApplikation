@@ -174,9 +174,9 @@ const SpaCalendar: React.FC<SpaCalendarProps> = ({ onBack }) => {
             )}
 
             {!selectedDate && (
-              <div className="bg-amber-50 border-l-4 border-amber-500 p-8 rounded-lg text-center">
+              <div className="hidden md:block bg-amber-50 border-l-4 border-amber-500 p-8 rounded-lg text-center">
                 <p className="text-amber-800 text-lg font-semibold">
-                  👈 Välj ett datum till vänster för att komma igång
+                  Välj ett datum för att komma igång
                 </p>
               </div>
             )}
