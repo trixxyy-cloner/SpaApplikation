@@ -4,6 +4,7 @@ import TimeSlotPicker from "./TimeSlotPicker";
 import BookingForm from "./BookingForm";
 import useBookings from "../utils/Storage";
 import type { Booking } from "../types/BookingType";
+import { calculateTotalPrice } from "../constants/prices";
 
 interface Holiday {
   datum: string;
@@ -67,7 +68,7 @@ const SpaCalendar: React.FC<SpaCalendarProps> = ({ onBack }) => {
     setSelectedTimeSlot(timeSlot);
   };
 
-  const handleBookingSubmit = (data: Omit<Booking, 'date' | 'time'>): void => {
+  const handleBookingSubmit = (data: Omit<Booking, 'date' | 'time' | 'price'>): void => {
     if (!selectedDate || !selectedTimeSlot) return;
 
     const dateString = selectedDate.toISOString().split("T")[0];
@@ -91,6 +92,7 @@ const SpaCalendar: React.FC<SpaCalendarProps> = ({ onBack }) => {
       date: dateString,
       time: selectedTimeSlot,
       package: data.package,
+      price: calculateTotalPrice(data.package, data.numberOfPeople),
       companyName: data.companyName,
       numberOfPeople: data.numberOfPeople,
       phone: data.phone,
