@@ -5,14 +5,16 @@ export interface PriceStructure {
   pricePerPerson: number;
 }
 
+export const BASE_PRICE = 350; // Ny price-point
+
 export const PACKAGE_PRICES: Record<PackageType, PriceStructure> = {
   "Varm": {
-    basePrice: 500,
-    pricePerPerson: 50,
+    basePrice: BASE_PRICE,
+    pricePerPerson: 700,
   },
   "Kall": {
-    basePrice: 400,
-    pricePerPerson: 35,
+    basePrice: BASE_PRICE,
+    pricePerPerson: 500,
   },
 };
 
