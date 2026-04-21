@@ -121,17 +121,19 @@ const BookingForm: React.FC<BookingFormProps> = ({
           <label htmlFor="numberOfPeople" className="block text-sm font-semibold text-gray-700 mb-2">
             Antal personer *
           </label>
-          <input
+          <select 
             id="numberOfPeople"
-            type="number"
             name="numberOfPeople"
             value={formData.numberOfPeople}
             onChange={handleChange}
-            min="1"
-            max="20"
             required
             className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 transition"
-          />
+          >
+            <option value="1">1 person</option>
+            <option value="2">2 personer</option>
+            <option value="3">3 personer</option>
+            <option value="4">4 personer</option>
+          </select>
         </div>
 
         {/* Phone */}
