@@ -94,7 +94,7 @@ const BookingForm: React.FC<BookingFormProps> = ({
               <option value="Kall">❄️ Kall</option>
             </select>
             <div className="px-4 py-2 bg-blue-100 text-blue-800 font-bold rounded-lg flex items-center whitespace-nowrap">
-              {calculateTotalPrice(formData.package, formData.numberOfPeople)} kr
+              {calculateTotalPrice(formData.package, formData.numberOfPeople, selectedDate)} kr
             </div>
           </div>
         </div>

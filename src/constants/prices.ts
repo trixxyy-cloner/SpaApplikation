@@ -8,11 +8,11 @@ export interface PriceStructure {
 export const BASE_PRICE = 350; // Ny price-point
 
 export const PACKAGE_PRICES: Record<PackageType, PriceStructure> = {
-  "Varm": {
+  Varm: {
     basePrice: BASE_PRICE,
     pricePerPerson: 700,
   },
-  "Kall": {
+  Kall: {
     basePrice: BASE_PRICE,
     pricePerPerson: 500,
   },
@@ -20,8 +20,15 @@ export const PACKAGE_PRICES: Record<PackageType, PriceStructure> = {
 
 export const calculateTotalPrice = (
   packageType: PackageType,
-  numberOfPeople: number
+  numberOfPeople: number,
+  date?: Date,
 ): number => {
   const pricing = PACKAGE_PRICES[packageType];
-  return pricing.basePrice + pricing.pricePerPerson * numberOfPeople;
+  let total = pricing.basePrice + pricing.pricePerPerson * numberOfPeople;
+
+  //Kolla om det är tisdag för 15%
+  if (date && date.getDay() === 2) {
+    total *= 0.85; //15% rabatt
+  }
+  return Math.round(total);
 };
