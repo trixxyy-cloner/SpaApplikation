@@ -92,9 +92,10 @@ const SpaCalendar: React.FC<SpaCalendarProps> = ({ onBack }) => {
       date: dateString,
       time: selectedTimeSlot,
       package: data.package,
-      price: calculateTotalPrice(data.package, data.numberOfPeople),
+      price: calculateTotalPrice(data.package, data.numberOfPeople, data.numberOfChildren),
       companyName: data.companyName,
       numberOfPeople: data.numberOfPeople,
+      numberOfChildren: data.numberOfChildren,
       phone: data.phone,
       email: data.email,
     });

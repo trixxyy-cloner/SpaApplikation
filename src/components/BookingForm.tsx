@@ -8,6 +8,7 @@ interface BookingFormProps {
     package: "Varm" | "Kall";
     companyName: string;
     numberOfPeople: number;
+    numberOfChildren: number;
     phone: string;
     email: string;
   }) => void;
@@ -22,6 +23,7 @@ const BookingForm: React.FC<BookingFormProps> = ({
     package: "Varm" as "Varm" | "Kall",
     companyName: "",
     numberOfPeople: 1,
+    numberOfChildren: 0,
     phone: "",
     email: "",
   });
@@ -34,7 +36,8 @@ const BookingForm: React.FC<BookingFormProps> = ({
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
-      [name]: name === "numberOfPeople" ? parseInt(value, 10) : value,
+      [name]: name === "numberOfPeople" ? parseInt(value) : value,
+      [name]: name === "numberOfChildren" ? parseInt(value) : value,
     }));
   };
 
@@ -52,6 +55,7 @@ const BookingForm: React.FC<BookingFormProps> = ({
       package: "Varm",
       companyName: "",
       numberOfPeople: 1,
+      numberOfChildren: 0,
       phone: "",
       email: "",
     });
@@ -94,7 +98,7 @@ const BookingForm: React.FC<BookingFormProps> = ({
               <option value="Kall">❄️ Kall</option>
             </select>
             <div className="px-4 py-2 bg-blue-100 text-blue-800 font-bold rounded-lg flex items-center whitespace-nowrap">
-              {calculateTotalPrice(formData.package, formData.numberOfPeople)} kr
+              {calculateTotalPrice(formData.package, formData.numberOfPeople, formData.numberOfChildren)} kr
             </div>
           </div>
         </div>
@@ -128,8 +132,21 @@ const BookingForm: React.FC<BookingFormProps> = ({
             value={formData.numberOfPeople}
             onChange={handleChange}
             min="1"
-            max="20"
+            max="4"
             required
+            className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 transition"
+          />
+          <label htmlFor="numberOfChildren" className="block text-sm font-semibold text-gray-700 mb-2">
+            Antal barn (under tolv år)
+          </label>
+          <input
+            id="numberOfChildren"
+            type="number"
+            name="numberOfChildren"
+            value={formData.numberOfChildren}
+            onChange={handleChange}
+            min="0"
+            max={formData.numberOfPeople-1}
             className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 transition"
           />
         </div>

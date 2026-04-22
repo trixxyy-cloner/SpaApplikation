@@ -6,20 +6,26 @@ export interface PriceStructure {
 }
 
 export const PACKAGE_PRICES: Record<PackageType, PriceStructure> = {
+  
   "Varm": {
-    basePrice: 500,
-    pricePerPerson: 50,
+    basePrice: 350,
+    pricePerPerson: 500,
   },
   "Kall": {
     basePrice: 400,
-    pricePerPerson: 35,
+    pricePerPerson: 700,
   },
 };
 
 export const calculateTotalPrice = (
   packageType: PackageType,
-  numberOfPeople: number
+  numberOfPeople: number,
+  numberOfChildren?: number
 ): number => {
+  let discount: number = 0;
+  if (numberOfChildren && numberOfChildren > 0){
+    discount= numberOfChildren/2
+  }
   const pricing = PACKAGE_PRICES[packageType];
-  return pricing.basePrice + pricing.pricePerPerson * numberOfPeople;
+  return pricing.basePrice + pricing.pricePerPerson * (numberOfPeople-discount);
 };
