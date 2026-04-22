@@ -92,7 +92,7 @@ const SpaCalendar: React.FC<SpaCalendarProps> = ({ onBack }) => {
       date: dateString,
       time: selectedTimeSlot,
       package: data.package,
-      price: calculateTotalPrice(data.package, data.numberOfPeople),
+      price: calculateTotalPrice(data.package, data.numberOfPeople, selectedDate),
       companyName: data.companyName,
       numberOfPeople: data.numberOfPeople,
       phone: data.phone,
@@ -132,6 +132,9 @@ const SpaCalendar: React.FC<SpaCalendarProps> = ({ onBack }) => {
               <h2 className="text-2xl font-bold text-gray-800 mb-6">
                 Välj datum
               </h2>
+              <p className="text-green-600 font-semibold mt-2">
+                15% rabatt på alla behandlingar på tisdagar!
+              </p>
               <div className="calendar-wrapper">
                 <Calendar
                   tileDisabled={shouldDisableTile}
