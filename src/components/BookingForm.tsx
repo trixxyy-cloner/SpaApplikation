@@ -1,5 +1,14 @@
 import React, { useState } from "react";
 import { calculateTotalPrice } from "../constants/prices";
+import ConfirmationMessage from "./ConfirmationMessage";
+
+interface ConfirmationData {
+  name: string;
+  date: Date;
+  package: "Varm" | "Kall";
+  price: number;
+  time: "FM" | "EM" | "Kväll";
+}
 
 interface BookingFormProps {
   selectedDate: Date | null;
@@ -8,35 +17,40 @@ interface BookingFormProps {
     package: "Varm" | "Kall";
     companyName: string;
     numberOfPeople: number;
+    numberOfChildren: number;
     phone: string;
     email: string;
   }) => void;
+  defaultPackage?: "Varm" | "Kall";
 }
 
 const BookingForm: React.FC<BookingFormProps> = ({
   selectedDate,
   selectedTimeSlot,
-  onSubmit,
+  onSubmit: handleBookingSubmit,
+  defaultPackage,
 }) => {
   const [formData, setFormData] = useState({
-    package: "Varm" as "Varm" | "Kall",
+    package: defaultPackage || "Varm" as "Varm" | "Kall",
     companyName: "",
     numberOfPeople: 1,
+    numberOfChildren: 0,
     phone: "",
     email: "",
   });
 
-  const [submitted, setSubmitted] = useState(false);
+  const [confirmationData, setConfirmationData] = useState<ConfirmationData | null>(null);
+  
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-  ) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: name === "numberOfPeople" ? parseInt(value, 10) : value,
-    }));
-  };
+  e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+) => {
+  const { name, value } = e.target;
+  setFormData((prev) => ({
+    ...prev,
+    [name]: (name === "numberOfPeople" || name === "numberOfChildren") ? parseInt(value, 10) : value,
+  }));
+};
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -46,17 +60,34 @@ const BookingForm: React.FC<BookingFormProps> = ({
       return;
     }
 
-    onSubmit(formData);
-    setSubmitted(true);
+    if (formData.numberOfChildren > 0 && formData.numberOfPeople < 1) {
+      alert("Barn måste bokas i sällskap med minst 1 vuxen");
+      return;
+    }
+
+    handleBookingSubmit(formData);
+
+    setConfirmationData({
+      name: formData.companyName,
+      date: selectedDate as Date,
+      package: formData.package,
+      price: calculateTotalPrice(
+        formData.package,
+        formData.numberOfPeople,
+        formData.numberOfChildren,
+        selectedDate || undefined
+      ),
+      time: selectedTimeSlot as "FM" | "EM" | "Kväll",
+    });
+
     setFormData({
       package: "Varm",
       companyName: "",
       numberOfPeople: 1,
+      numberOfChildren: 0,
       phone: "",
       email: "",
     });
-
-    setTimeout(() => setSubmitted(false), 3000);
   };
 
   if (!selectedDate || !selectedTimeSlot) {
@@ -69,11 +100,16 @@ const BookingForm: React.FC<BookingFormProps> = ({
 
   return (
     <div className="bg-white rounded-lg shadow-lg p-8">
-
-      {submitted && (
-        <div className="mb-6 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded">
-          ✓ Bokningen är registrerad!
-        </div>
+      {confirmationData && (
+        <ConfirmationMessage
+          isVisible={!!confirmationData}
+          name={confirmationData.name}
+          date={confirmationData.date}
+          package={confirmationData.package}
+          price={confirmationData.price}
+          time={confirmationData.time}
+          onClose={() => setConfirmationData(null)}
+        />
       )}
 
       <form onSubmit={handleSubmit} className="space-y-6">
@@ -94,7 +130,7 @@ const BookingForm: React.FC<BookingFormProps> = ({
               <option value="Kall">❄️ Kall</option>
             </select>
             <div className="px-4 py-2 bg-blue-100 text-blue-800 font-bold rounded-lg flex items-center whitespace-nowrap">
-              {calculateTotalPrice(formData.package, formData.numberOfPeople)} kr
+              {calculateTotalPrice(formData.package, formData.numberOfPeople, formData.numberOfChildren, selectedDate)} kr
             </div>
           </div>
         </div>
@@ -119,7 +155,7 @@ const BookingForm: React.FC<BookingFormProps> = ({
         {/* Number of People */}
         <div>
           <label htmlFor="numberOfPeople" className="block text-sm font-semibold text-gray-700 mb-2">
-            Antal personer *
+            Antal vuxna *
           </label>
           <input
             id="numberOfPeople"
@@ -128,8 +164,24 @@ const BookingForm: React.FC<BookingFormProps> = ({
             value={formData.numberOfPeople}
             onChange={handleChange}
             min="1"
-            max="20"
+            max="4"
             required
+            className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 transition"
+          />
+          <label htmlFor="numberOfChildren" className="block text-sm font-semibold text-gray-700 mb-2">
+            Antal barn (under 12 år)
+          </label>
+          <p className="text-sm text-gray-500 mb-2">
+            Barn räknas separat och får 50% rabatt
+          </p>
+          <input
+            id="numberOfChildren"
+            type="number"
+            name="numberOfChildren"
+            value={formData.numberOfChildren}
+            onChange={handleChange}
+            min="0"
+            max={formData.numberOfPeople-1}
             className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 transition"
           />
         </div>
