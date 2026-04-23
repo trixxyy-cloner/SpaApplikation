@@ -19,19 +19,27 @@ export const PACKAGE_PRICES: Record<PackageType, PriceStructure> = {
 };
 
 export const calculateTotalPrice = (
-  packageType: PackageType,
+  packageType: "Varm" | "Kall",
   numberOfPeople: number,
   numberOfChildren: number = 0,
-  date?: Date,
+  date?: Date
 ): number => {
-  
   const pricing = PACKAGE_PRICES[packageType];
-  const numberOfAdults = numberOfPeople - numberOfChildren;
-  let total = pricing.basePrice + pricing.pricePerPerson * (numberOfAdults + numberOfChildren/2);
+  const pricePerPerson = pricing.basePrice + pricing.pricePerPerson;
 
-  //Kolla om det är tisdag för 15%
+  // Vuxenpris
+  const adultsPrice = pricePerPerson * numberOfPeople;
+
+  // Barnpris (50% rabatt per barn)
+  const childPrice = (pricePerPerson * 0.5) * numberOfChildren;
+
+  // Totala före tisdags-rabatt
+  let total = adultsPrice + childPrice;
+
+  // Tisdags-rabatten
   if (date && date.getDay() === 2) {
-    total *= 0.85; //15% rabatt
+    total = total * 0.85;
   }
+
   return Math.round(total);
-};
+}
