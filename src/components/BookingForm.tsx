@@ -60,7 +60,7 @@ const BookingForm: React.FC<BookingFormProps> = ({
       return;
     }
 
-    if (formData.numberOfChildren > 0 && formData.numberOfPeople === 0) {
+    if (formData.numberOfChildren > 0 && formData.numberOfPeople < 1) {
       alert("Barn måste bokas i sällskap med minst 1 vuxen");
       return;
     }
@@ -155,7 +155,7 @@ const BookingForm: React.FC<BookingFormProps> = ({
         {/* Number of People */}
         <div>
           <label htmlFor="numberOfPeople" className="block text-sm font-semibold text-gray-700 mb-2">
-            Antal personer *
+            Antal vuxna *
           </label>
           <input
             id="numberOfPeople"
@@ -169,8 +169,11 @@ const BookingForm: React.FC<BookingFormProps> = ({
             className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 transition"
           />
           <label htmlFor="numberOfChildren" className="block text-sm font-semibold text-gray-700 mb-2">
-            Antal barn (under 12 år, måste bokas i sällskap)
+            Antal barn (under 12 år)
           </label>
+          <p className="text-sm text-gray-500 mb-2">
+            Barn räknas separat och får 50% rabatt
+          </p>
           <input
             id="numberOfChildren"
             type="number"
