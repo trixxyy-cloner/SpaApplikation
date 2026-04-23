@@ -2,44 +2,177 @@ import Calendar from "react-calendar";
 import { useState, useEffect } from "react";
 import TimeSlotPicker from "./TimeSlotPicker";
 import BookingForm from "./BookingForm";
+import ConfirmationMessage from "./ConfirmationMessage";
 import useBookings from "../utils/Storage";
 import type { Booking } from "../types/BookingType";
 import { calculateTotalPrice } from "../constants/prices";
+import { THEME_DAYS_FIXED, THEME_DAY_PRICE } from "../constants/themeDays";
+import ThemeDayBookingForm from "./ThemeDayBookingForm";
 
 interface Holiday {
   datum: string;
   "röd dag": string;
 }
 
-interface SpaCalendarProps {
-  onBack: () => void;
+interface OpenHolidayResponse {
+  startDate: string;
+  name: Array<{ text: string }>;
 }
 
-const SpaCalendar: React.FC<SpaCalendarProps> = ({ onBack }) => {
+interface ConfirmationData {
+  name: string;
+  date: Date;
+  package: string;
+  price: number;
+  time: string;
+}
+
+interface SpaCalendarProps {
+  onBack: () => void;
+  selectedPackage?: "Varm" | "Kall" | "Temakur" | null;
+  selectedThemeDay?: string | null;
+}
+
+const SpaCalendar: React.FC<SpaCalendarProps> = ({ onBack, selectedPackage, selectedThemeDay }) => {
   const [redDaysList, setRedDaysList] = useState<Holiday[]>([]);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedTimeSlot, setSelectedTimeSlot] = useState<"FM" | "EM" | "Kväll" | null>(null);
-  const { bookTime, isWarmBooked, isColdBooked } = useBookings();
+  const [confirmationData, setConfirmationData] = useState<ConfirmationData | null>(null);
+  const { bookTime, isWarmBooked, isColdBooked, isThemeDayFull } = useBookings();
+  const [cachedYears, setCachedYears] = useState<Set<number>>(new Set());
+  const [fetchingYears, setFetchingYears] = useState<Set<number>>(new Set());
+  const [allThemeDays, setAllThemeDays] = useState<Array<{ date: string; name: string }>>([]);
+  const [visibleMonth, setVisibleMonth] = useState<Date>(new Date());
+    
+
+  // Hämtar röda dagar för ett specifikt år
+  const fetchRedDaysForYear = async (year: number) => {
+    if (cachedYears.has(year) || fetchingYears.has(year)) return;
+
+    setFetchingYears((prev) => new Set([...prev, year]));
+
+    try {
+      const response = await fetch(`http://sholiday.faboul.se/dagar/v2.1/${year}`);
+      const data = await response.json();
+
+      const filteredRedDays: Holiday[] = data.dagar.filter(
+        (dag: Holiday) => dag["röd dag"] === "Ja"
+      );
+
+      setRedDaysList((prev) => {
+        const withoutYear = prev.filter((rd) => !rd.datum.startsWith(`${year}`));
+        return [...withoutYear, ...filteredRedDays];
+      });
+
+      setCachedYears((prev) => new Set([...prev, year]));
+    } catch (error) {
+      console.error(`Fel vid hämtning av röda dagar för ${year}:`, error);
+    } finally {
+      setFetchingYears((prev) => {
+        const next = new Set(prev);
+        next.delete(year);
+        return next;
+      });
+    }
+  };
+
+  // Hämtar temadagar för ett specifikt år
+  const fetchThemeDaysForYear = async (year: number) => {
+  // Kolla om vi redan hämtat eller håller på att hämta det året
+  if (cachedYears.has(year) || fetchingYears.has(year)) return;
+
+  setFetchingYears((prev) => new Set([...prev, year]));
+
+  try {
+    const response = await fetch(
+      `https://openholidaysapi.org/PublicHolidays?countryIsoCode=SE&languageIsoCode=SV&validFrom=${year}-01-01&validTo=${year}-12-31`
+    );
+    const data = await response.json();
+
+    const themeDayNames = ["Nyårsdagen", "Påskdagen", "Midsommardagen", "Alla helgons dag"];
+    const holidays = data || [];
+
+    const filtered = holidays
+      .map((holiday: OpenHolidayResponse) => ({
+        date: holiday.startDate,
+        name: holiday.name[0]?.text || ""
+      }))
+      .filter((holiday: { name: string; date: string }) =>
+        themeDayNames.includes(holiday.name)
+      );
+
+    setAllThemeDays((prev) => [...prev, ...filtered]);
+    setCachedYears((prev) => new Set([...prev, year]));
+  } catch (error) {
+    console.error(`Fel vid hämtning av temadagar för ${year}:`, error);
+  } finally {
+    setFetchingYears((prev) => {
+      const next = new Set(prev);
+      next.delete(year);
+      return next;
+    });
+  }
+};
+
+  
+  // Förval datum om en temada är vald
+  useEffect(() => {
+    if (selectedThemeDay) {
+      const date = new Date(selectedThemeDay);
+      setSelectedDate(date);
+    }
+  }, [selectedThemeDay]);
 
   useEffect(() => {
-    const getSwedishHolidays = async () => {
-      try {
-        const response = await fetch("http://sholiday.faboul.se/dagar/v2.1/2026");
-        const data = await response.json();
-
-        const filteredRedDays: Holiday[] = data.dagar.filter(
-          (dag: Holiday) => dag["röd dag"] === "Ja"
-        );
-        setRedDaysList(filteredRedDays);
-      } catch (error) {
-        console.error("Fel vid hämtning av helgdagar:", error);
-      }
-    };
-    getSwedishHolidays();
+    const currentYear = new Date().getFullYear();
+    
+    fetchThemeDaysForYear(currentYear - 1);
+    fetchThemeDaysForYear(currentYear);
+    fetchThemeDaysForYear(currentYear + 1);
+    
+    fetchRedDaysForYear(currentYear - 1);
+    fetchRedDaysForYear(currentYear);
+    fetchRedDaysForYear(currentYear + 1);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+  const year = visibleMonth.getFullYear();
+  
+  fetchThemeDaysForYear(year - 1);
+  fetchThemeDaysForYear(year);
+  fetchThemeDaysForYear(year + 1);
+  
+  fetchRedDaysForYear(year - 1);
+  fetchRedDaysForYear(year);
+  fetchRedDaysForYear(year + 1);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [visibleMonth]);
+
+  const isThemeDay = (date: Date): boolean => {
+    const dateString = date.toLocaleDateString("sv-SE");
+  
+  return (
+    THEME_DAYS_FIXED.some((td) => td.date === dateString) ||
+    allThemeDays.some((td) => td.date === dateString)
+  );
+};
+  
+  const getThemeDayName = (date: Date): string | null => {
+    const dateString = date.toLocaleDateString("sv-SE");
+    const found = 
+      THEME_DAYS_FIXED.find((td) => td.date === dateString) ||
+      allThemeDays.find((td) => td.date === dateString);
+    return found ? found.name : null;
+  }
 
   const shouldDisableTile = ({ date }: {date: Date}): boolean => {
     const calenderDateString = date.toLocaleDateString("sv-SE");
+
+    if (isThemeDay(date)) {
+      return false;
+    }
+
     const isMonday = date.getDay() === 1;
 
     const isHoliday = redDaysList.some(
@@ -60,9 +193,9 @@ const SpaCalendar: React.FC<SpaCalendarProps> = ({ onBack }) => {
     return;
   }
   const date = Array.isArray(value) ? value[0] : value;
-  setSelectedDate(date);
-  setSelectedTimeSlot(null);
-};
+    setSelectedDate(date);
+    setSelectedTimeSlot(null);
+  };
 
   const handleTimeSlotSelect = (timeSlot: "FM" | "EM" | "Kväll"): void => {
     setSelectedTimeSlot(timeSlot);
@@ -88,23 +221,78 @@ const SpaCalendar: React.FC<SpaCalendarProps> = ({ onBack }) => {
       return;
     }
 
+    const totalPrice = calculateTotalPrice(data.package as "Varm" | "Kall", data.numberOfPeople);
+
     bookTime({
       date: dateString,
       time: selectedTimeSlot,
       package: data.package,
-      price: calculateTotalPrice(data.package, data.numberOfPeople),
+      price: totalPrice,
       companyName: data.companyName,
       numberOfPeople: data.numberOfPeople,
       phone: data.phone,
       email: data.email,
+      isThemeDay: false,
     });
 
-    alert("Bokning sparad!");
+    setConfirmationData({
+      name: data.companyName,
+      date: selectedDate,
+      package: data.package,
+      price: totalPrice,
+      time: selectedTimeSlot,
+    });
+
     setSelectedTimeSlot(null);
+  };
+
+  const handleThemeDayBooking = (data: Omit<Booking, 'date' | 'time' | 'price' | 'isThemeDay'>): void => {
+    if (!selectedDate) return;
+
+    const dateString = selectedDate.toISOString().split("T")[0];
+
+    if (isThemeDayFull(dateString)) {
+      alert("Temadagen är fullbokad!");
+      return;
+    }
+
+    bookTime({
+      date: dateString,
+      time: "10-17",
+      package: "Temakur",
+      price: THEME_DAY_PRICE,
+      companyName: data.companyName,
+      numberOfPeople: 1, // Alltid 1 för temadagar
+      phone: data.phone,
+      email: data.email,
+      isThemeDay: true,
+    });
+
+    setConfirmationData({
+      name: data.companyName,
+      date: selectedDate,
+      package: "Temakur",
+      price: THEME_DAY_PRICE,
+      time: "10-17",
+    });
+
+    setSelectedDate(null);
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-900 via-blue-800 to-purple-900 flex flex-col">
+      {confirmationData && (
+        <ConfirmationMessage
+          isVisible={!!confirmationData}
+          name={confirmationData.name}
+          date={confirmationData.date}
+          package={confirmationData.package}
+          price={confirmationData.price}
+          time={confirmationData.time}
+          onClose={() => setConfirmationData(null)}
+        />
+      )}
+
       <div className="max-w-7xl mx-auto flex-1 py-12 px-4">
         {/* Bakåt knapp */}
         <button
@@ -135,6 +323,13 @@ const SpaCalendar: React.FC<SpaCalendarProps> = ({ onBack }) => {
               <div className="calendar-wrapper">
                 <Calendar
                   tileDisabled={shouldDisableTile}
+                  onActiveStartDateChange={({ activeStartDate }) => setVisibleMonth(activeStartDate || new Date())}
+                  tileClassName={({ date }) => {
+                    if (isThemeDay(date)) {
+                      return "bg-amber-300 text-amber-900 font-bold";
+                    }
+                    return "";
+                  }}
                   onChange={(value) => handleDateChange(value as Date | Date[] | null)}
                   value={selectedDate}
                   className="w-full"
@@ -155,20 +350,31 @@ const SpaCalendar: React.FC<SpaCalendarProps> = ({ onBack }) => {
           <div className="lg:col-span-2 space-y-8">
             {selectedDate && (
               <>
-                <TimeSlotPicker
-                  selectedDate={selectedDate}
-                  selectedTimeSlot={selectedTimeSlot}
-                  onTimeSlotSelect={handleTimeSlotSelect}
-                  isWarmBooked={isWarmBooked}
-                  isColdBooked={isColdBooked}
-                />
-
-                {selectedTimeSlot && (
-                  <BookingForm
+                {isThemeDay(selectedDate) ? (
+                  <ThemeDayBookingForm
+                    selectedDate={selectedDate}
+                    themeDayName={getThemeDayName(selectedDate) || "Temakur"}
+                    onSubmit={handleThemeDayBooking}
+                  />
+                ) : (
+                  <>
+                  <TimeSlotPicker
                     selectedDate={selectedDate}
                     selectedTimeSlot={selectedTimeSlot}
-                    onSubmit={handleBookingSubmit}
+                    onTimeSlotSelect={handleTimeSlotSelect}
+                    isWarmBooked={isWarmBooked}
+                    isColdBooked={isColdBooked}
                   />
+
+                  {selectedTimeSlot && (
+                    <BookingForm
+                      selectedDate={selectedDate}
+                      selectedTimeSlot={selectedTimeSlot}
+                      onSubmit={handleBookingSubmit}
+                      defaultPackage={selectedPackage === "Varm" || selectedPackage === "Kall" ? selectedPackage : undefined}
+                    />
+                  )}
+                  </>
                 )}
               </>
             )}

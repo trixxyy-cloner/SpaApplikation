@@ -1,5 +1,14 @@
 import React, { useState } from "react";
 import { calculateTotalPrice } from "../constants/prices";
+import ConfirmationMessage from "./ConfirmationMessage";
+
+interface ConfirmationData {
+  name: string;
+  date: Date;
+  package: "Varm" | "Kall";
+  price: number;
+  time: "FM" | "EM" | "Kväll";
+}
 
 interface BookingFormProps {
   selectedDate: Date | null;
@@ -11,22 +20,25 @@ interface BookingFormProps {
     phone: string;
     email: string;
   }) => void;
+  defaultPackage?: "Varm" | "Kall";
 }
 
 const BookingForm: React.FC<BookingFormProps> = ({
   selectedDate,
   selectedTimeSlot,
-  onSubmit,
+  onSubmit: handleBookingSubmit,
+  defaultPackage,
 }) => {
   const [formData, setFormData] = useState({
-    package: "Varm" as "Varm" | "Kall",
+    package: defaultPackage || "Varm" as "Varm" | "Kall",
     companyName: "",
     numberOfPeople: 1,
     phone: "",
     email: "",
   });
 
-  const [submitted, setSubmitted] = useState(false);
+  const [confirmationData, setConfirmationData] = useState<ConfirmationData | null>(null);
+  
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -46,8 +58,16 @@ const BookingForm: React.FC<BookingFormProps> = ({
       return;
     }
 
-    onSubmit(formData);
-    setSubmitted(true);
+    handleBookingSubmit(formData);
+
+    setConfirmationData({
+      name: formData.companyName,
+      date: selectedDate as Date,
+      package: formData.package,
+      price: calculateTotalPrice(formData.package, formData.numberOfPeople),
+      time: selectedTimeSlot as "FM" | "EM" | "Kväll",
+    });
+
     setFormData({
       package: "Varm",
       companyName: "",
@@ -55,8 +75,6 @@ const BookingForm: React.FC<BookingFormProps> = ({
       phone: "",
       email: "",
     });
-
-    setTimeout(() => setSubmitted(false), 3000);
   };
 
   if (!selectedDate || !selectedTimeSlot) {
@@ -69,11 +87,16 @@ const BookingForm: React.FC<BookingFormProps> = ({
 
   return (
     <div className="bg-white rounded-lg shadow-lg p-8">
-
-      {submitted && (
-        <div className="mb-6 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded">
-          ✓ Bokningen är registrerad!
-        </div>
+      {confirmationData && (
+        <ConfirmationMessage
+          isVisible={!!confirmationData}
+          name={confirmationData.name}
+          date={confirmationData.date}
+          package={confirmationData.package}
+          price={confirmationData.price}
+          time={confirmationData.time}
+          onClose={() => setConfirmationData(null)}
+        />
       )}
 
       <form onSubmit={handleSubmit} className="space-y-6">
