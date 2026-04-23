@@ -6,17 +6,12 @@ import ConfirmationMessage from "./ConfirmationMessage";
 import useBookings from "../utils/Storage";
 import type { Booking } from "../types/BookingType";
 import { calculateTotalPrice } from "../constants/prices";
-import { THEME_DAYS_FIXED, THEME_DAY_PRICE } from "../constants/themeDays";
+import { fetchThemeDaysForYear, THEME_DAY_PRICE, type ThemeDay } from "../constants/themeDays";
 import ThemeDayBookingForm from "./ThemeDayBookingForm";
 
 interface Holiday {
   datum: string;
   "röd dag": string;
-}
-
-interface OpenHolidayResponse {
-  startDate: string;
-  name: Array<{ text: string }>;
 }
 
 interface ConfirmationData {
@@ -31,17 +26,29 @@ interface SpaCalendarProps {
   onBack: () => void;
   selectedPackage?: "Varm" | "Kall" | "Temakur" | null;
   selectedThemeDay?: string | null;
+  initialThemeDays?: ThemeDay[];
 }
 
-const SpaCalendar: React.FC<SpaCalendarProps> = ({ onBack, selectedPackage, selectedThemeDay }) => {
+const SpaCalendar: React.FC<SpaCalendarProps> = ({ onBack, selectedPackage, selectedThemeDay, initialThemeDays = [] }) => {
   const [redDaysList, setRedDaysList] = useState<Holiday[]>([]);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedTimeSlot, setSelectedTimeSlot] = useState<"FM" | "EM" | "Kväll" | null>(null);
   const [confirmationData, setConfirmationData] = useState<ConfirmationData | null>(null);
   const { bookTime, isWarmBooked, isColdBooked, isThemeDayFull } = useBookings();
-  const [cachedYears, setCachedYears] = useState<Set<number>>(new Set());
+  
+  // Initialisera cached years från initialThemeDays för att undvika duplikat hämtningar
+  const getInitialCachedYears = (): Set<number> => {
+    const years = new Set<number>();
+    initialThemeDays.forEach((td) => {
+      const year = parseInt(td.date.split('-')[0], 10);
+      years.add(year);
+    });
+    return years;
+  };
+  
+  const [cachedYears, setCachedYears] = useState<Set<number>>(getInitialCachedYears());
   const [fetchingYears, setFetchingYears] = useState<Set<number>>(new Set());
-  const [allThemeDays, setAllThemeDays] = useState<Array<{ date: string; name: string }>>([]);
+  const [allThemeDays, setAllThemeDays] = useState<Array<{ date: string; name: string }>>(initialThemeDays);
   const [visibleMonth, setVisibleMonth] = useState<Date>(new Date());
     
 
@@ -76,43 +83,29 @@ const SpaCalendar: React.FC<SpaCalendarProps> = ({ onBack, selectedPackage, sele
     }
   };
 
-  // Hämtar temadagar för ett specifikt år
-  const fetchThemeDaysForYear = async (year: number) => {
-  // Kolla om vi redan hämtat eller håller på att hämta det året
-  if (cachedYears.has(year) || fetchingYears.has(year)) return;
+  // Hämtar temadagar från API med caching
+  const handleFetchThemeDaysForYear = async (year: number) => {
+    if (cachedYears.has(year) || fetchingYears.has(year)) return;
 
-  setFetchingYears((prev) => new Set([...prev, year]));
+    setFetchingYears((prev) => new Set([...prev, year]));
 
-  try {
-    const response = await fetch(
-      `https://openholidaysapi.org/PublicHolidays?countryIsoCode=SE&languageIsoCode=SV&validFrom=${year}-01-01&validTo=${year}-12-31`
-    );
-    const data = await response.json();
-
-    const themeDayNames = ["Nyårsdagen", "Påskdagen", "Midsommardagen", "Alla helgons dag"];
-    const holidays = data || [];
-
-    const filtered = holidays
-      .map((holiday: OpenHolidayResponse) => ({
-        date: holiday.startDate,
-        name: holiday.name[0]?.text || ""
-      }))
-      .filter((holiday: { name: string; date: string }) =>
-        themeDayNames.includes(holiday.name)
-      );
-
-    setAllThemeDays((prev) => [...prev, ...filtered]);
-    setCachedYears((prev) => new Set([...prev, year]));
-  } catch (error) {
-    console.error(`Fel vid hämtning av temadagar för ${year}:`, error);
-  } finally {
-    setFetchingYears((prev) => {
-      const next = new Set(prev);
-      next.delete(year);
-      return next;
-    });
-  }
-};
+    try {
+      const themeDays = await fetchThemeDaysForYear(year);
+      setAllThemeDays((prev) => {
+        const withoutYear = prev.filter((td) => !td.date.startsWith(year.toString()));
+        return [...withoutYear, ...themeDays];
+      });
+      setCachedYears((prev) => new Set([...prev, year]));
+    } catch (error) {
+      console.error(`Fel vid hämtning av temadagar för ${year}:`, error);
+    } finally {
+      setFetchingYears((prev) => {
+        const next = new Set(prev);
+        next.delete(year);
+        return next;
+      });
+    }
+  };
 
   
   // Förval datum om en temada är vald
@@ -120,15 +113,34 @@ const SpaCalendar: React.FC<SpaCalendarProps> = ({ onBack, selectedPackage, sele
     if (selectedThemeDay) {
       const date = new Date(selectedThemeDay);
       setSelectedDate(date);
+      setVisibleMonth(date);
     }
   }, [selectedThemeDay]);
+
+  // Hoppa till nästa framtida temada när Temakur paket väljs
+  useEffect(() => {
+    if (selectedPackage === "Temakur" && !selectedThemeDay && allThemeDays.length > 0) {
+      const today = new Date().toISOString().split('T')[0]; // Format: YYYY-MM-DD
+
+      // Hitta nästa framtida temada genom att jämföra strängarna direkt
+      const nextThemeDay = allThemeDays
+        .filter(td => td.date > today)
+        .sort((a, b) => a.date.localeCompare(b.date))[0];
+
+      if (nextThemeDay) {
+        const date = new Date(nextThemeDay.date);
+        setSelectedDate(date);
+        setVisibleMonth(date);
+      }
+    }
+  }, [selectedPackage, allThemeDays, selectedThemeDay]);
 
   useEffect(() => {
     const currentYear = new Date().getFullYear();
     
-    fetchThemeDaysForYear(currentYear - 1);
-    fetchThemeDaysForYear(currentYear);
-    fetchThemeDaysForYear(currentYear + 1);
+    handleFetchThemeDaysForYear(currentYear - 1);
+    handleFetchThemeDaysForYear(currentYear);
+    handleFetchThemeDaysForYear(currentYear + 1);
     
     fetchRedDaysForYear(currentYear - 1);
     fetchRedDaysForYear(currentYear);
@@ -139,9 +151,9 @@ const SpaCalendar: React.FC<SpaCalendarProps> = ({ onBack, selectedPackage, sele
   useEffect(() => {
   const year = visibleMonth.getFullYear();
   
-  fetchThemeDaysForYear(year - 1);
-  fetchThemeDaysForYear(year);
-  fetchThemeDaysForYear(year + 1);
+  handleFetchThemeDaysForYear(year - 1);
+  handleFetchThemeDaysForYear(year);
+  handleFetchThemeDaysForYear(year + 1);
   
   fetchRedDaysForYear(year - 1);
   fetchRedDaysForYear(year);
@@ -151,24 +163,28 @@ const SpaCalendar: React.FC<SpaCalendarProps> = ({ onBack, selectedPackage, sele
 
   const isThemeDay = (date: Date): boolean => {
     const dateString = date.toLocaleDateString("sv-SE");
-  
-  return (
-    THEME_DAYS_FIXED.some((td) => td.date === dateString) ||
-    allThemeDays.some((td) => td.date === dateString)
-  );
-};
+    return allThemeDays.some((td) => td.date === dateString);
+  };
   
   const getThemeDayName = (date: Date): string | null => {
     const dateString = date.toLocaleDateString("sv-SE");
-    const found = 
-      THEME_DAYS_FIXED.find((td) => td.date === dateString) ||
-      allThemeDays.find((td) => td.date === dateString);
+    const found = allThemeDays.find((td) => td.date === dateString);
     return found ? found.name : null;
-  }
+  };
 
   const shouldDisableTile = ({ date }: {date: Date}): boolean => {
     const calenderDateString = date.toLocaleDateString("sv-SE");
 
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const isPast = date < today;
+
+    // Deaktivera om datum redan har passerat (även temadagar)
+    if (isPast) {
+      return true;
+    }
+
+    // Aktivera framtida temadagar
     if (isThemeDay(date)) {
       return false;
     }
@@ -179,11 +195,7 @@ const SpaCalendar: React.FC<SpaCalendarProps> = ({ onBack, selectedPackage, sele
       (holiday) => holiday.datum === calenderDateString
     );
 
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const isPast = date < today;
-
-    return isMonday || isHoliday || isPast;
+    return isMonday || isHoliday;
   }
 
   const handleDateChange = (value: Date | Date[] | null): void => {
