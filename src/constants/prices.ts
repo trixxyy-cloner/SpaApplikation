@@ -25,13 +25,14 @@ export const calculateTotalPrice = (
   date?: Date
 ): number => {
   const pricing = PACKAGE_PRICES[packageType];
-  const pricePerPerson = pricing.basePrice + pricing.pricePerPerson;
+  const adultPrice = pricing.basePrice + pricing.pricePerPerson * numberOfPeople;
+  const childPricePerPerson = pricing.pricePerPerson;
 
   // Vuxenpris
-  const adultsPrice = pricePerPerson * numberOfPeople;
+  const adultsPrice = adultPrice;
 
-  // Barnpris (50% rabatt per barn)
-  const childPrice = (pricePerPerson * 0.5) * numberOfChildren;
+  // Barnpris (50% rabatt på pris per person)
+  const childPrice = childPricePerPerson * 0.5 * numberOfChildren;
 
   // Totala före tisdags-rabatt
   let total = adultsPrice + childPrice;
