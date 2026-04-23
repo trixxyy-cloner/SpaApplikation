@@ -8,6 +8,7 @@ interface ThemeDayBookingFormProps {
     package: "Temakur";
     companyName: string;
     numberOfPeople: number;
+    numberOfChildren: number;
     phone: string;
     email: string;
   }) => void;
@@ -22,6 +23,7 @@ const ThemeDayBookingForm: React.FC<ThemeDayBookingFormProps> = ({
     package: "Temakur" as const,
     companyName: "",
     numberOfPeople: 1,
+    numberOfChildren: 0,
     phone: "",
     email: "",
   });
@@ -50,6 +52,7 @@ const ThemeDayBookingForm: React.FC<ThemeDayBookingFormProps> = ({
       package: "Temakur",
       companyName: "",
       numberOfPeople: 1,
+      numberOfChildren: 0,
       phone: "",
       email: "",
     });

@@ -17,6 +17,7 @@ interface BookingFormProps {
     package: "Varm" | "Kall";
     companyName: string;
     numberOfPeople: number;
+    numberOfChildren: number;
     phone: string;
     email: string;
   }) => void;
@@ -33,6 +34,7 @@ const BookingForm: React.FC<BookingFormProps> = ({
     package: defaultPackage || "Varm" as "Varm" | "Kall",
     companyName: "",
     numberOfPeople: 1,
+    numberOfChildren: 0,
     phone: "",
     email: "",
   });
@@ -41,14 +43,14 @@ const BookingForm: React.FC<BookingFormProps> = ({
   
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-  ) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: name === "numberOfPeople" ? parseInt(value, 10) : value,
-    }));
-  };
+  e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+) => {
+  const { name, value } = e.target;
+  setFormData((prev) => ({
+    ...prev,
+    [name]: (name === "numberOfPeople" || name === "numberOfChildren") ? parseInt(value, 10) : value,
+  }));
+};
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -58,13 +60,23 @@ const BookingForm: React.FC<BookingFormProps> = ({
       return;
     }
 
+    if (formData.numberOfChildren > 0 && formData.numberOfPeople === 0) {
+      alert("Barn måste bokas i sällskap med minst 1 vuxen");
+      return;
+    }
+
     handleBookingSubmit(formData);
 
     setConfirmationData({
       name: formData.companyName,
       date: selectedDate as Date,
       package: formData.package,
-      price: calculateTotalPrice(formData.package, formData.numberOfPeople),
+      price: calculateTotalPrice(
+        formData.package,
+        formData.numberOfPeople,
+        formData.numberOfChildren,
+        selectedDate || undefined
+      ),
       time: selectedTimeSlot as "FM" | "EM" | "Kväll",
     });
 
@@ -72,6 +84,7 @@ const BookingForm: React.FC<BookingFormProps> = ({
       package: "Varm",
       companyName: "",
       numberOfPeople: 1,
+      numberOfChildren: 0,
       phone: "",
       email: "",
     });
@@ -117,7 +130,7 @@ const BookingForm: React.FC<BookingFormProps> = ({
               <option value="Kall">❄️ Kall</option>
             </select>
             <div className="px-4 py-2 bg-blue-100 text-blue-800 font-bold rounded-lg flex items-center whitespace-nowrap">
-              {calculateTotalPrice(formData.package, formData.numberOfPeople)} kr
+              {calculateTotalPrice(formData.package, formData.numberOfPeople, formData.numberOfChildren, selectedDate)} kr
             </div>
           </div>
         </div>
@@ -144,19 +157,30 @@ const BookingForm: React.FC<BookingFormProps> = ({
           <label htmlFor="numberOfPeople" className="block text-sm font-semibold text-gray-700 mb-2">
             Antal personer *
           </label>
-          <select 
+          <input
             id="numberOfPeople"
+            type="number"
             name="numberOfPeople"
             value={formData.numberOfPeople}
             onChange={handleChange}
+            min="1"
+            max="4"
             required
             className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 transition"
-          >
-            <option value="1">1 person</option>
-            <option value="2">2 personer</option>
-            <option value="3">3 personer</option>
-            <option value="4">4 personer</option>
-          </select>
+          />
+          <label htmlFor="numberOfChildren" className="block text-sm font-semibold text-gray-700 mb-2">
+            Antal barn (under 12 år, måste bokas i sällskap)
+          </label>
+          <input
+            id="numberOfChildren"
+            type="number"
+            name="numberOfChildren"
+            value={formData.numberOfChildren}
+            onChange={handleChange}
+            min="0"
+            max={formData.numberOfPeople-1}
+            className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 transition"
+          />
         </div>
 
         {/* Phone */}

@@ -5,6 +5,7 @@ export type Booking = {
     price: number,
     companyName: string,
     numberOfPeople: number,
+    numberOfChildren: number,
     phone: string,
     email: string
     isThemeDay?: boolean,

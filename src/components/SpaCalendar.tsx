@@ -221,7 +221,17 @@ const SpaCalendar: React.FC<SpaCalendarProps> = ({ onBack, selectedPackage, sele
       return;
     }
 
-    const totalPrice = calculateTotalPrice(data.package as "Varm" | "Kall", data.numberOfPeople);
+    if (data.numberOfChildren > 0 && data.numberOfPeople === 0) {
+      alert("Barn måste bokas i sällskap med minst 1 vuxen");
+      return;
+    }
+
+    const totalPrice = calculateTotalPrice(
+      data.package as "Varm" | "Kall",
+      data.numberOfPeople,
+      data.numberOfChildren,
+      selectedDate
+    );
 
     bookTime({
       date: dateString,
@@ -230,6 +240,7 @@ const SpaCalendar: React.FC<SpaCalendarProps> = ({ onBack, selectedPackage, sele
       price: totalPrice,
       companyName: data.companyName,
       numberOfPeople: data.numberOfPeople,
+      numberOfChildren: data.numberOfChildren,
       phone: data.phone,
       email: data.email,
       isThemeDay: false,
@@ -249,6 +260,11 @@ const SpaCalendar: React.FC<SpaCalendarProps> = ({ onBack, selectedPackage, sele
   const handleThemeDayBooking = (data: Omit<Booking, 'date' | 'time' | 'price' | 'isThemeDay'>): void => {
     if (!selectedDate) return;
 
+    if (data.numberOfChildren > 0) {
+      alert("Barn kan inte bokas på tematiska specialdagar");
+      return;
+    }
+
     const dateString = selectedDate.toISOString().split("T")[0];
 
     if (isThemeDayFull(dateString)) {
@@ -263,6 +279,7 @@ const SpaCalendar: React.FC<SpaCalendarProps> = ({ onBack, selectedPackage, sele
       price: THEME_DAY_PRICE,
       companyName: data.companyName,
       numberOfPeople: 1, // Alltid 1 för temadagar
+      numberOfChildren: 0,
       phone: data.phone,
       email: data.email,
       isThemeDay: true,
@@ -320,6 +337,9 @@ const SpaCalendar: React.FC<SpaCalendarProps> = ({ onBack, selectedPackage, sele
               <h2 className="text-2xl font-bold text-gray-800 mb-6">
                 Välj datum
               </h2>
+              <p className="text-green-600 font-semibold mt-2">
+                15% rabatt på alla behandlingar på tisdagar!
+              </p>
               <div className="calendar-wrapper">
                 <Calendar
                   tileDisabled={shouldDisableTile}
