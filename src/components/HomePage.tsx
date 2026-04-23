@@ -1,17 +1,45 @@
 import React from "react";
 
+import { type ThemeDay } from "../constants/themeDays";
+
 interface HomePageProps {
   onSelectPackage: (packageType: "Varm" | "Kall" | "Temakur") => void;
   onSelectThemeDay?: (date: string) => void;
+  themeDays: ThemeDay[];
 }
 
-const HomePage: React.FC<HomePageProps> = ({ onSelectPackage, onSelectThemeDay }) => {
-  const themeDays = [
-    { date: "2026-01-01", name: "Nyårsdagen", emoji: "🎆" },
-    { date: "2026-04-05", name: "Påskdagen", emoji: "🐣" },
-    { date: "2026-06-20", name: "Midsommardagen", emoji: "🌞" },
-    { date: "2026-10-31", name: "Alla helgons dag", emoji: "👻" },
-  ];
+const getThemeDayEmoji = (name: string): string => {
+  const emojiMap: Record<string, string> = {
+    "Nyårsdagen": "🎆",
+    "Påskdagen": "🐣",
+    "Midsommardagen": "🌞",
+    "Alla helgons dag": "👻",
+  };
+  return emojiMap[name] || "✨";
+};
+
+const HomePage: React.FC<HomePageProps> = ({ onSelectPackage, onSelectThemeDay, themeDays }) => {
+  // Deduplicera och filtrera bort temadagar som redan har passerat
+  const today = new Date().toISOString().split('T')[0];
+  
+  // Deduplicera först med Map (garanterar unika)
+  const dedupMap = new Map<string, ThemeDay>();
+  themeDays.forEach(td => dedupMap.set(td.date, td));
+  
+  // Gruppera efter hemdag-namn, ta bara den första (tidigaste) framtida förekomsten
+  const themesByName = new Map<string, ThemeDay>();
+  Array.from(dedupMap.values())
+    .filter((td) => td.date > today)
+    .sort((a, b) => a.date.localeCompare(b.date))
+    .forEach(td => {
+      if (!themesByName.has(td.name)) {
+        themesByName.set(td.name, td);
+      }
+    });
+  
+  const futureThemeDays = Array.from(themesByName.values()).sort((a, b) => 
+    a.date.localeCompare(b.date)
+  );
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-900 via-blue-800 to-purple-900 flex flex-col">
@@ -78,14 +106,14 @@ const HomePage: React.FC<HomePageProps> = ({ onSelectPackage, onSelectThemeDay }
             ✨ Temadags!
           </h3>
           <div className="grid md:grid-cols-4 gap-6">
-            {themeDays.map((day) => (
+            {futureThemeDays.map((day) => (
               <button
                 key={day.date}
                 onClick={() => onSelectThemeDay?.(day.date)}
                 className="bg-gradient-to-br from-amber-200 to-yellow-400 rounded-lg shadow-2xl overflow-hidden hover:shadow-3xl transition transform hover:scale-105 duration-300 text-left cursor-pointer"
               >
                 <div className="bg-gradient-to-r from-amber-400 to-yellow-500 h-20 flex items-center justify-center">
-                  <span className="text-4xl">{day.emoji}</span>
+                  <span className="text-4xl">{getThemeDayEmoji(day.name)}</span>
                 </div>
                 <div className="p-6">
                   <h4 className="text-2xl font-bold text-gray-800 mb-3">
