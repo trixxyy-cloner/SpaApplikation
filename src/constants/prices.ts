@@ -5,27 +5,33 @@ export interface PriceStructure {
   pricePerPerson: number;
 }
 
+export const BASE_PRICE = 350; // Ny price-point
+
 export const PACKAGE_PRICES: Record<PackageType, PriceStructure> = {
-  
-  "Varm": {
-    basePrice: 350,
-    pricePerPerson: 500,
-  },
-  "Kall": {
-    basePrice: 400,
+  Varm: {
+    basePrice: BASE_PRICE,
     pricePerPerson: 700,
+  },
+  Kall: {
+    basePrice: BASE_PRICE,
+    pricePerPerson: 500,
   },
 };
 
 export const calculateTotalPrice = (
   packageType: PackageType,
   numberOfPeople: number,
-  numberOfChildren?: number
+  numberOfChildren: number = 0,
+  date?: Date,
 ): number => {
-  let discount: number = 0;
-  if (numberOfChildren && numberOfChildren > 0){
-    discount= numberOfChildren/2
-  }
+  
   const pricing = PACKAGE_PRICES[packageType];
-  return pricing.basePrice + pricing.pricePerPerson * (numberOfPeople-discount);
+  const numberOfAdults = numberOfPeople - numberOfChildren;
+  let total = pricing.basePrice + pricing.pricePerPerson * (numberOfAdults + numberOfChildren/2);
+
+  //Kolla om det är tisdag för 15%
+  if (date && date.getDay() === 2) {
+    total *= 0.85; //15% rabatt
+  }
+  return Math.round(total);
 };

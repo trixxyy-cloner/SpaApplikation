@@ -98,7 +98,7 @@ const BookingForm: React.FC<BookingFormProps> = ({
               <option value="Kall">❄️ Kall</option>
             </select>
             <div className="px-4 py-2 bg-blue-100 text-blue-800 font-bold rounded-lg flex items-center whitespace-nowrap">
-              {calculateTotalPrice(formData.package, formData.numberOfPeople, formData.numberOfChildren)} kr
+              {calculateTotalPrice(formData.package, formData.numberOfPeople, formData.numberOfChildren, selectedDate)} kr
             </div>
           </div>
         </div>
@@ -125,30 +125,19 @@ const BookingForm: React.FC<BookingFormProps> = ({
           <label htmlFor="numberOfPeople" className="block text-sm font-semibold text-gray-700 mb-2">
             Antal personer *
           </label>
-          <input
+          <select 
             id="numberOfPeople"
-            type="number"
             name="numberOfPeople"
             value={formData.numberOfPeople}
             onChange={handleChange}
-            min="1"
-            max="4"
             required
             className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 transition"
-          />
-          <label htmlFor="numberOfChildren" className="block text-sm font-semibold text-gray-700 mb-2">
-            Antal barn (under tolv år)
-          </label>
-          <input
-            id="numberOfChildren"
-            type="number"
-            name="numberOfChildren"
-            value={formData.numberOfChildren}
-            onChange={handleChange}
-            min="0"
-            max={formData.numberOfPeople-1}
-            className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 transition"
-          />
+          >
+            <option value="1">1 person</option>
+            <option value="2">2 personer</option>
+            <option value="3">3 personer</option>
+            <option value="4">4 personer</option>
+          </select>
         </div>
 
         {/* Phone */}
